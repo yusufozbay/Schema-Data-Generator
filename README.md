@@ -4,7 +4,7 @@ A Streamlit web application that generates Schema.org structured data (JSON-LD a
 
 ## Features
 
-- ✨ **AI-Powered Parsing**: Use Google Gemini 2.5 Pro to automatically extract Q&A pairs from any format
+- ✨ **AI-Powered Parsing**: Use Google Gemini AI to automatically extract Q&A pairs from any format
 - 🎯 **Multiple Formats**: Generate both JSON-LD and HTML Microdata formats
 - 📥 **Download Schema**: Download generated schema as a file
 - 🎨 **Modern UI**: Clean, responsive Streamlit interface
