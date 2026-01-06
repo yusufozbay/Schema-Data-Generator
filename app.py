@@ -16,12 +16,38 @@ def fetch_url_content_with_gemini(url, api_key):
     This approach combines robust fetching with AI-powered content extraction.
     
     Security Note: This function fetches content from user-provided URLs.
-    Basic validation is implemented to allow only http:// and https:// protocols.
+    Security measures implemented:
+    - Only http:// and https:// protocols are allowed
+    - Requests have timeout limits to prevent hanging
+    - Private/internal IP ranges should be avoided by users
+    
+    Users should be aware that this could be used to fetch content from any
+    publicly accessible web page.
     """
     try:
         # Validate URL scheme
         if not url.startswith(('http://', 'https://')):
             return None, "Invalid URL: Only http:// and https:// protocols are supported"
+        
+        # Additional security check: Warn about localhost/internal IPs
+        # Note: This is a basic check; users are responsible for not targeting internal resources
+        from urllib.parse import urlparse
+        parsed = urlparse(url)
+        hostname = parsed.hostname
+        if hostname:
+            hostname_lower = hostname.lower()
+            # Check for obvious internal/localhost patterns
+            if (hostname_lower in ('localhost', '127.0.0.1', '0.0.0.0') or
+                hostname_lower.startswith('192.168.') or
+                hostname_lower.startswith('10.') or
+                hostname_lower.startswith('172.16.') or
+                hostname_lower.startswith('172.17.') or
+                hostname_lower.startswith('172.18.') or
+                hostname_lower.startswith('172.19.') or
+                hostname_lower.startswith('172.2') or
+                hostname_lower.startswith('172.3') or
+                hostname_lower.startswith('169.254.')):
+                return None, "Invalid URL: Access to internal/private networks is not allowed"
         
         # Fetch URL with enhanced headers and retry logic
         headers = {
@@ -86,7 +112,11 @@ def fetch_url_content(url):
     The primary method should use Gemini AI for better compatibility.
     
     Security Note: This function fetches content from user-provided URLs.
-    Basic validation is implemented to allow only http:// and https:// protocols.
+    Security measures implemented:
+    - Only http:// and https:// protocols are allowed
+    - Requests have timeout limits to prevent hanging
+    - Private/internal IP ranges should be avoided by users
+    
     Users should be aware that this could be used to fetch content from any
     publicly accessible web page.
     """
@@ -94,6 +124,25 @@ def fetch_url_content(url):
         # Validate URL scheme
         if not url.startswith(('http://', 'https://')):
             return None, "Invalid URL: Only http:// and https:// protocols are supported"
+        
+        # Additional security check: Warn about localhost/internal IPs
+        from urllib.parse import urlparse
+        parsed = urlparse(url)
+        hostname = parsed.hostname
+        if hostname:
+            hostname_lower = hostname.lower()
+            # Check for obvious internal/localhost patterns
+            if (hostname_lower in ('localhost', '127.0.0.1', '0.0.0.0') or
+                hostname_lower.startswith('192.168.') or
+                hostname_lower.startswith('10.') or
+                hostname_lower.startswith('172.16.') or
+                hostname_lower.startswith('172.17.') or
+                hostname_lower.startswith('172.18.') or
+                hostname_lower.startswith('172.19.') or
+                hostname_lower.startswith('172.2') or
+                hostname_lower.startswith('172.3') or
+                hostname_lower.startswith('169.254.')):
+                return None, "Invalid URL: Access to internal/private networks is not allowed"
         
         # Add timeout and headers to avoid blocking
         headers = {
