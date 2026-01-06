@@ -6,10 +6,11 @@ import requests
 from bs4 import BeautifulSoup
 
 def fetch_url_content_with_gemini(url, api_key):
-    """Fetch and extract content from a URL using Gemini AI.
+    """Fetch and extract content from a URL with Gemini AI assistance.
     
-    This function uses Gemini's capability to directly access and analyze web content,
-    which bypasses restrictions that may be encountered with traditional HTTP requests.
+    This function first attempts to fetch the URL with enhanced HTTP headers,
+    then uses Gemini AI to intelligently extract and clean the main content.
+    This approach combines robust fetching with AI-powered content extraction.
     
     Security Note: This function fetches content from user-provided URLs.
     Basic validation is implemented to allow only http:// and https:// protocols.
@@ -19,21 +20,48 @@ def fetch_url_content_with_gemini(url, api_key):
         if not url.startswith(('http://', 'https://')):
             return None, "Invalid URL: Only http:// and https:// protocols are supported"
         
+        # Fetch URL with enhanced headers and retry logic
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9,tr;q=0.8',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Cache-Control': 'max-age=0'
+        }
+        
+        # Try to fetch the URL
+        response = requests.get(url, headers=headers, timeout=15, allow_redirects=True)
+        response.raise_for_status()
+        
+        # Get the raw HTML content
+        html_content = response.text
+        
         # Configure Gemini API
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-2.0-flash-exp')
         
-        # Ask Gemini to fetch and extract the main content from the URL
-        prompt = f"""Please fetch and extract the main textual content from this URL: {url}
+        # Use Gemini to intelligently extract the main content from the HTML
+        prompt = f"""Extract and return only the main textual content from the following HTML page.
 
-Return the content in a clean, readable format. Focus on the main article or page content, excluding:
+Focus on the main article or page content. Exclude:
 - Navigation menus
-- Advertisements
+- Advertisements  
 - Footer content
 - Sidebars
+- Cookie notices
 - Scripts and styles
+- Social media widgets
+- Comments sections
 
-Just return the extracted text content without any additional commentary or explanation."""
+Return clean, readable text that represents the core content of the page. Do not add any commentary or explanation - just return the extracted content.
+
+HTML Content:
+{html_content[:50000]}"""  # Limit to ~50k chars to avoid token limits
         
         response = model.generate_content(prompt)
         content = response.text.strip()
@@ -42,8 +70,10 @@ Just return the extracted text content without any additional commentary or expl
             return None, "No content could be extracted from the URL"
         
         return content, None
+    except requests.exceptions.RequestException as e:
+        return None, f"Error fetching URL: {str(e)}"
     except Exception as e:
-        return None, f"Error fetching URL with Gemini: {str(e)}"
+        return None, f"Error processing URL with Gemini: {str(e)}"
 
 
 def fetch_url_content(url):
