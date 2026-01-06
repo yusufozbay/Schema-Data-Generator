@@ -8,11 +8,15 @@ from bs4 import BeautifulSoup
 def fetch_url_content(url):
     """Fetch and extract text content from a URL."""
     try:
+        # Validate URL scheme
+        if not url.startswith(('http://', 'https://')):
+            return None, "Invalid URL: Only http:// and https:// protocols are supported"
+        
         # Add timeout and headers to avoid blocking
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         }
-        response = requests.get(url, headers=headers, timeout=10)
+        response = requests.get(url, headers=headers, timeout=10, allow_redirects=True, max_redirects=5)
         response.raise_for_status()
         
         # Parse HTML content
