@@ -718,7 +718,7 @@ else:  # URL Input
     url_input = st.text_input(
         "Enter URL to fetch content from:",
         placeholder="https://example.com/page",
-        help="Paste a URL and Gemini will fetch and extract relevant content for the selected schema type",
+        help="Paste a URL and the app will fetch the content, then use Gemini AI to extract relevant information for the selected schema type",
         key="url_input"
     )
 
@@ -751,7 +751,7 @@ if st.button("Generate Schema", type="primary"):
                     st.stop()
                 else:
                     final_content = fetched_content
-                    st.success(f"✅ Successfully fetched content from URL")
+                    st.success("✅ Successfully fetched content from URL")
                     with st.expander("View fetched content"):
                         st.text_area("Fetched Content", final_content, height=200, disabled=True)
         
