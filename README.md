@@ -5,12 +5,13 @@ A Streamlit web application that generates Schema.org structured data (JSON-LD a
 ## Features
 
 - ✨ **AI-Powered Generation**: Use Google Gemini AI to automatically extract and structure content
+- 🌐 **URL-Based Fetching**: Paste a URL and automatically fetch content from any web page
 - 🎯 **8 Schema Types**: Support for FAQPage, Article, Product, Breadcrumb, LocalBusiness, HowTo, Recipe, and Person
 - 📊 **Multiple Formats**: Generate both JSON-LD and HTML Microdata formats
 - 📥 **Download Schema**: Download generated schema as a file
 - 🎨 **Modern UI**: Clean, responsive Streamlit interface with dynamic examples
 - ⚡ **Fast**: Built with Streamlit for instant results
-- 🔄 **Flexible Input**: Natural language input - AI extracts the structure
+- 🔄 **Flexible Input**: Natural language input or URL - AI extracts the structure
 
 ## Getting Started
 
@@ -57,19 +58,27 @@ A Streamlit web application that generates Schema.org structured data (JSON-LD a
    - **Recipe**: For cooking recipes
    - **Person**: For information about people
 
-3. **Enter Your Content**: Simply paste your content in natural language. The AI will automatically extract and structure the relevant information based on the selected schema type.
+3. **Choose Input Mode**:
+   - **Text Input**: Paste your content directly in natural language
+   - **URL Input**: Paste a URL and the app will automatically fetch the page content
 
-4. **Select Format**: Choose between:
+4. **Enter Your Content**: 
+   - For **Text Input**: Simply paste your content in natural language. The AI will automatically extract and structure the relevant information based on the selected schema type.
+   - For **URL Input**: Paste a URL (e.g., https://example.com/article), and the app will fetch the page content and extract relevant information.
+
+5. **Select Format**: Choose between:
    - **JSON-LD**: JSON format that can be embedded in `<script type="application/ld+json">` tags
    - **HTML Microdata**: HTML markup with Schema.org microdata attributes
 
-5. **Generate**: Click the "Generate Schema" button to create your schema markup
+6. **Generate**: Click the "Generate Schema" button to create your schema markup
 
-6. **Download**: Click "Download Schema" to save the generated schema to a file
+7. **Download**: Click "Download Schema" to save the generated schema to a file
 
 ## Example
 
-### FAQPage Input:
+### Text Input Examples:
+
+#### FAQPage Input:
 ```
 What is your return policy?
 We accept returns within 30 days of purchase with original receipt.
@@ -77,6 +86,18 @@ We accept returns within 30 days of purchase with original receipt.
 Do you offer international shipping?
 Yes, we ship to over 100 countries worldwide.
 ```
+
+### URL Input Examples:
+
+You can also use URL input mode to automatically fetch content from web pages:
+
+- **Article Schema**: Paste a blog post or news article URL
+- **Product Schema**: Paste a product page URL  
+- **Recipe Schema**: Paste a recipe page URL
+- **FAQPage Schema**: Paste an FAQ page URL
+- **LocalBusiness Schema**: Paste a business website URL
+
+The app will automatically fetch the page content and use AI to extract relevant information based on your selected schema type.
 
 ### Article Input:
 ```
@@ -170,6 +191,8 @@ streamlit run app.py
 - Python 3.8+
 - streamlit>=1.28.0
 - google-generativeai>=0.3.0
+- requests>=2.31.0
+- beautifulsoup4>=4.12.0
 - Google Gemini API key (required for AI-powered schema generation)
 
 See `requirements.txt` for full dependency list.
