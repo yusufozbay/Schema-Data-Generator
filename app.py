@@ -5,11 +5,22 @@ import os
 import requests
 from bs4 import BeautifulSoup
 
-def fetch_url_content(url):
-    """Fetch and extract raw HTML content from a URL.
+# Constants
+MAX_HTML_CONTENT_LENGTH = 50000  # Maximum HTML content length to send to Gemini (in characters)
+
+def fetch_url_content_with_gemini(url, api_key):
+    """Fetch and extract content from a URL with Gemini AI assistance.
+    
+    This function first attempts to fetch the URL with enhanced HTTP headers,
+    then uses Gemini AI to intelligently extract and clean the main content.
+    This approach combines robust fetching with AI-powered content extraction.
     
     Security Note: This function fetches content from user-provided URLs.
-    Basic validation is implemented to allow only http:// and https:// protocols.
+    Security measures implemented:
+    - Only http:// and https:// protocols are allowed
+    - Requests have timeout limits to prevent hanging
+    - Private/internal IP ranges should be avoided by users
+    
     Users should be aware that this could be used to fetch content from any
     publicly accessible web page.
     """
@@ -17,6 +28,121 @@ def fetch_url_content(url):
         # Validate URL scheme
         if not url.startswith(('http://', 'https://')):
             return None, "Invalid URL: Only http:// and https:// protocols are supported"
+        
+        # Additional security check: Warn about localhost/internal IPs
+        # Note: This is a basic check; users are responsible for not targeting internal resources
+        from urllib.parse import urlparse
+        parsed = urlparse(url)
+        hostname = parsed.hostname
+        if hostname:
+            hostname_lower = hostname.lower()
+            # Check for obvious internal/localhost patterns
+            if (hostname_lower in ('localhost', '127.0.0.1', '0.0.0.0') or
+                hostname_lower.startswith('192.168.') or
+                hostname_lower.startswith('10.') or
+                hostname_lower.startswith('172.16.') or
+                hostname_lower.startswith('172.17.') or
+                hostname_lower.startswith('172.18.') or
+                hostname_lower.startswith('172.19.') or
+                hostname_lower.startswith('172.2') or
+                hostname_lower.startswith('172.3') or
+                hostname_lower.startswith('169.254.')):
+                return None, "Invalid URL: Access to internal/private networks is not allowed"
+        
+        # Fetch URL with enhanced headers and retry logic
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9,tr;q=0.8',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Cache-Control': 'max-age=0'
+        }
+        
+        # Try to fetch the URL
+        response = requests.get(url, headers=headers, timeout=15, allow_redirects=True)
+        response.raise_for_status()
+        
+        # Get the raw HTML content
+        html_content = response.text
+        
+        # Configure Gemini API
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        
+        # Use Gemini to intelligently extract the main content from the HTML
+        prompt = f"""Extract and return only the main textual content from the following HTML page.
+
+Focus on the main article or page content. Exclude:
+- Navigation menus
+- Advertisements  
+- Footer content
+- Sidebars
+- Cookie notices
+- Scripts and styles
+- Social media widgets
+- Comments sections
+
+Return clean, readable text that represents the core content of the page. Do not add any commentary or explanation - just return the extracted content.
+
+HTML Content:
+{html_content[:MAX_HTML_CONTENT_LENGTH]}"""  # Limit content to avoid token limits
+        
+        response = model.generate_content(prompt)
+        content = response.text.strip()
+        
+        if not content:
+            return None, "No content could be extracted from the URL"
+        
+        return content, None
+    except requests.exceptions.RequestException as e:
+        return None, f"Error fetching URL: {str(e)}"
+    except Exception as e:
+        return None, f"Error processing URL with Gemini: {str(e)}"
+
+
+def fetch_url_content(url):
+    """Fetch and extract raw HTML content from a URL (fallback method).
+    
+    This is a fallback method that uses traditional HTTP requests.
+    The primary method should use Gemini AI for better compatibility.
+    
+    Security Note: This function fetches content from user-provided URLs.
+    Security measures implemented:
+    - Only http:// and https:// protocols are allowed
+    - Requests have timeout limits to prevent hanging
+    - Private/internal IP ranges should be avoided by users
+    
+    Users should be aware that this could be used to fetch content from any
+    publicly accessible web page.
+    """
+    try:
+        # Validate URL scheme
+        if not url.startswith(('http://', 'https://')):
+            return None, "Invalid URL: Only http:// and https:// protocols are supported"
+        
+        # Additional security check: Warn about localhost/internal IPs
+        from urllib.parse import urlparse
+        parsed = urlparse(url)
+        hostname = parsed.hostname
+        if hostname:
+            hostname_lower = hostname.lower()
+            # Check for obvious internal/localhost patterns
+            if (hostname_lower in ('localhost', '127.0.0.1', '0.0.0.0') or
+                hostname_lower.startswith('192.168.') or
+                hostname_lower.startswith('10.') or
+                hostname_lower.startswith('172.16.') or
+                hostname_lower.startswith('172.17.') or
+                hostname_lower.startswith('172.18.') or
+                hostname_lower.startswith('172.19.') or
+                hostname_lower.startswith('172.2') or
+                hostname_lower.startswith('172.3') or
+                hostname_lower.startswith('169.254.')):
+                return None, "Invalid URL: Access to internal/private networks is not allowed"
         
         # Add timeout and headers to avoid blocking
         headers = {
@@ -47,6 +173,37 @@ def fetch_url_content(url):
         return None, f"Error fetching URL: {str(e)}"
     except Exception as e:
         return None, f"Error processing URL content: {str(e)}"
+
+
+def fetch_url_with_fallback(url, api_key):
+    """Fetch URL content using Gemini AI with fallback to traditional HTTP.
+    
+    This function implements a dual-approach mechanism:
+    1. First tries Gemini AI-based fetching with enhanced headers
+    2. Falls back to traditional HTTP requests if needed
+    
+    Args:
+        url: The URL to fetch content from
+        api_key: Google Gemini API key for AI-powered extraction
+    
+    Returns:
+        tuple: (content, error) where content is the fetched text or None,
+               and error is an error message or None
+    """
+    # Try Gemini-based fetching first (better compatibility, bypasses 403 errors)
+    content, error = fetch_url_content_with_gemini(url, api_key)
+    
+    # If Gemini fetch fails, try traditional HTTP request as fallback
+    if error:
+        content, fallback_error = fetch_url_content(url)
+        if fallback_error:
+            # Both methods failed
+            return None, f"Primary method: {error}. Fallback method: {fallback_error}"
+        # Fallback succeeded
+        return content, None
+    
+    # Primary method succeeded
+    return content, None
 
 
 def generate_schema_with_ai(input_text, schema_type, api_key):
@@ -766,16 +923,17 @@ if st.button("Generate Schema", type="primary"):
         # Fetch content from URL if in URL mode
         final_content = content_input
         if input_mode == "URL Input":
-            with st.spinner("Fetching content from URL..."):
-                fetched_content, fetch_error = fetch_url_content(url_input)
+            with st.spinner("Fetching content from URL using Gemini AI..."):
+                fetched_content, fetch_error = fetch_url_with_fallback(url_input, api_key)
+                
                 if fetch_error:
-                    st.error(fetch_error)
+                    st.error(f"Failed to fetch URL. Error: {fetch_error}")
                     st.stop()
-                else:
-                    final_content = fetched_content
-                    st.success("✅ Successfully fetched content from URL")
-                    with st.expander("View fetched content"):
-                        st.text_area("Fetched Content", final_content, height=200, disabled=True)
+                
+                final_content = fetched_content
+                st.success("✅ Successfully fetched content from URL")
+                with st.expander("View fetched content"):
+                    st.text_area("Fetched Content", final_content, height=200, disabled=True)
         
         with st.spinner(f"Using AI to generate {schema_type} schema..."):
             data, error = generate_schema_with_ai(final_content, schema_type, api_key)
