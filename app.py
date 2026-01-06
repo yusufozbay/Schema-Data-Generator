@@ -5,6 +5,9 @@ import os
 import requests
 from bs4 import BeautifulSoup
 
+# Constants
+MAX_HTML_CONTENT_LENGTH = 50000  # Maximum HTML content length to send to Gemini (in characters)
+
 def fetch_url_content_with_gemini(url, api_key):
     """Fetch and extract content from a URL with Gemini AI assistance.
     
@@ -61,7 +64,7 @@ Focus on the main article or page content. Exclude:
 Return clean, readable text that represents the core content of the page. Do not add any commentary or explanation - just return the extracted content.
 
 HTML Content:
-{html_content[:50000]}"""  # Limit to ~50k chars to avoid token limits
+{html_content[:MAX_HTML_CONTENT_LENGTH]}"""  # Limit content to avoid token limits
         
         response = model.generate_content(prompt)
         content = response.text.strip()
@@ -121,6 +124,37 @@ def fetch_url_content(url):
         return None, f"Error fetching URL: {str(e)}"
     except Exception as e:
         return None, f"Error processing URL content: {str(e)}"
+
+
+def fetch_url_with_fallback(url, api_key):
+    """Fetch URL content using Gemini AI with fallback to traditional HTTP.
+    
+    This function implements a dual-approach mechanism:
+    1. First tries Gemini AI-based fetching with enhanced headers
+    2. Falls back to traditional HTTP requests if needed
+    
+    Args:
+        url: The URL to fetch content from
+        api_key: Google Gemini API key for AI-powered extraction
+    
+    Returns:
+        tuple: (content, error) where content is the fetched text or None,
+               and error is an error message or None
+    """
+    # Try Gemini-based fetching first (better compatibility, bypasses 403 errors)
+    content, error = fetch_url_content_with_gemini(url, api_key)
+    
+    # If Gemini fetch fails, try traditional HTTP request as fallback
+    if error:
+        content, fallback_error = fetch_url_content(url)
+        if fallback_error:
+            # Both methods failed
+            return None, f"Primary method: {error}. Fallback method: {fallback_error}"
+        # Fallback succeeded
+        return content, None
+    
+    # Primary method succeeded
+    return content, None
 
 
 def generate_schema_with_ai(input_text, schema_type, api_key):
@@ -841,18 +875,11 @@ if st.button("Generate Schema", type="primary"):
         final_content = content_input
         if input_mode == "URL Input":
             with st.spinner("Fetching content from URL using Gemini AI..."):
-                # Try Gemini-based fetching first (better compatibility, bypasses 403 errors)
-                fetched_content, fetch_error = fetch_url_content_with_gemini(url_input, api_key)
+                fetched_content, fetch_error = fetch_url_with_fallback(url_input, api_key)
                 
-                # If Gemini fetch fails, try traditional HTTP request as fallback
                 if fetch_error:
-                    st.warning(f"Gemini fetch encountered an issue: {fetch_error}")
-                    st.info("Trying traditional HTTP request as fallback...")
-                    fetched_content, fetch_error = fetch_url_content(url_input)
-                    
-                    if fetch_error:
-                        st.error(f"Both fetch methods failed. Error: {fetch_error}")
-                        st.stop()
+                    st.error(f"Failed to fetch URL. Error: {fetch_error}")
+                    st.stop()
                 
                 final_content = fetched_content
                 st.success("✅ Successfully fetched content from URL")
