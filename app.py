@@ -28,12 +28,19 @@ def fetch_url_content(url):
         # Parse HTML content
         soup = BeautifulSoup(response.content, 'html.parser')
         
-        # Remove script and style elements
-        for script in soup(['script', 'style']):
+        # Remove script, style, and navigation elements to reduce size
+        for script in soup(['script', 'style', 'nav', 'footer', 'header', 'aside']):
             script.decompose()
         
         # Return the cleaned HTML content
         html_content = str(soup)
+        
+        # If HTML is too large (>100KB), fall back to text extraction
+        # to avoid exceeding AI model token limits
+        if len(html_content) > 100000:
+            text = soup.get_text(separator='\n', strip=True)
+            lines = [line.strip() for line in text.split('\n') if line.strip()]
+            return '\n'.join(lines), None
         
         return html_content, None
     except requests.exceptions.RequestException as e:
