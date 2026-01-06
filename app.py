@@ -6,7 +6,13 @@ import requests
 from bs4 import BeautifulSoup
 
 def fetch_url_content(url):
-    """Fetch and extract text content from a URL."""
+    """Fetch and extract text content from a URL.
+    
+    Security Note: This function fetches content from user-provided URLs.
+    Basic validation is implemented to allow only http:// and https:// protocols.
+    Users should be aware that this could be used to fetch content from any
+    publicly accessible web page.
+    """
     try:
         # Validate URL scheme
         if not url.startswith(('http://', 'https://')):
