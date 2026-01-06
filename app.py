@@ -6,7 +6,7 @@ import requests
 from bs4 import BeautifulSoup
 
 def fetch_url_content(url):
-    """Fetch and extract text content from a URL.
+    """Fetch and extract raw HTML content from a URL.
     
     Security Note: This function fetches content from user-provided URLs.
     Basic validation is implemented to allow only http:// and https:// protocols.
@@ -28,18 +28,21 @@ def fetch_url_content(url):
         # Parse HTML content
         soup = BeautifulSoup(response.content, 'html.parser')
         
-        # Remove script and style elements
+        # Remove script, style, and navigation elements to reduce size
         for script in soup(['script', 'style', 'nav', 'footer', 'header', 'aside']):
             script.decompose()
         
-        # Get text content
-        text = soup.get_text(separator='\n', strip=True)
+        # Return the cleaned HTML content
+        html_content = str(soup)
         
-        # Clean up extra whitespace
-        lines = [line.strip() for line in text.split('\n') if line.strip()]
-        content = '\n'.join(lines)
+        # If HTML is too large (>100KB), fall back to text extraction
+        # to avoid exceeding AI model token limits
+        if len(html_content) > 100000:
+            text = soup.get_text(separator='\n', strip=True)
+            lines = [line.strip() for line in text.split('\n') if line.strip()]
+            return '\n'.join(lines), None
         
-        return content, None
+        return html_content, None
     except requests.exceptions.RequestException as e:
         return None, f"Error fetching URL: {str(e)}"
     except Exception as e:
@@ -55,9 +58,9 @@ def generate_schema_with_ai(input_text, schema_type, api_key):
         prompts = {
             "FAQPage": f"""You are an AI assistant that extracts questions and answers from FAQ content.
 
-Given the following FAQ content, identify all question and answer pairs. The content may or may not have Q: and A: prefixes.
+Given the following content (which may be HTML or plain text), identify all question and answer pairs. The content may or may not have Q: and A: prefixes.
 
-FAQ Content:
+Content:
 {input_text}
 
 Extract each question and its corresponding answer, and return the result as a valid JSON object with this exact structure:
@@ -74,11 +77,12 @@ Important:
 - Ensure the JSON is valid and properly formatted
 - Extract all question-answer pairs in the order they appear
 - Remove any Q: or A: prefixes if present
+- If the input is HTML, parse it to extract the text content
 - If the content doesn't contain clear Q&A pairs, return {{"mainEntity": []}}""",
 
             "Article": f"""You are an AI assistant that extracts article information from content.
 
-Given the following content about an article:
+Given the following content (which may be HTML or plain text):
 {input_text}
 
 Extract the article information and return a valid JSON object with this structure:
@@ -89,26 +93,28 @@ Extract the article information and return a valid JSON object with this structu
   "dateModified": "YYYY-MM-DD",
   "description": "Brief description of the article",
   "articleBody": "Full article text or summary",
-  "image": "URL to article image (if mentioned)"
+  "image": "URL to article image (if found in HTML img tags or mentioned)"
 }}
 
 Important:
 - Only return the JSON object, nothing else
 - Do not include any markdown formatting or code blocks
 - Use today's date if publication date is not specified
+- If the input is HTML, parse it to extract text content and look for image URLs in <img> tags
+- Extract image URLs from src attributes in <img> tags if present
 - If a field is not found, use a reasonable default or empty string
 - Extract information intelligently from the provided content""",
 
             "Product": f"""You are an AI assistant that extracts product information from content.
 
-Given the following content about a product:
+Given the following content (which may be HTML or plain text):
 {input_text}
 
 Extract the product information and return a valid JSON object with this structure:
 {{
   "name": "Product name",
   "description": "Product description",
-  "image": "URL to product image (if mentioned)",
+  "image": "URL to product image (if found in HTML img tags or mentioned)",
   "brand": "Brand name",
   "offers": {{
     "price": "0.00",
@@ -124,12 +130,14 @@ Extract the product information and return a valid JSON object with this structu
 Important:
 - Only return the JSON object, nothing else
 - Do not include any markdown formatting or code blocks
+- If the input is HTML, parse it to extract text content and look for image URLs in <img> tags
+- Extract image URLs from src attributes in <img> tags if present
 - Extract all mentioned product details
 - Use reasonable defaults for missing information""",
 
             "Breadcrumb": f"""You are an AI assistant that extracts breadcrumb navigation from content.
 
-Given the following content about a breadcrumb trail:
+Given the following content (which may be HTML or plain text):
 {input_text}
 
 Extract the breadcrumb items and return a valid JSON object with this structure:
@@ -144,19 +152,20 @@ Extract the breadcrumb items and return a valid JSON object with this structure:
 Important:
 - Only return the JSON object, nothing else
 - Do not include any markdown formatting or code blocks
+- If the input is HTML, look for breadcrumb navigation elements and extract links from <a> tags
 - Extract breadcrumb items in order
 - If URLs are not provided, use placeholder URLs like https://example.com""",
 
             "LocalBusiness": f"""You are an AI assistant that extracts local business information from content.
 
-Given the following content about a local business:
+Given the following content (which may be HTML or plain text):
 {input_text}
 
 Extract the business information and return a valid JSON object with this structure:
 {{
   "name": "Business name",
   "description": "Business description",
-  "image": "URL to business image (if mentioned)",
+  "image": "URL to business image (if found in HTML img tags or mentioned)",
   "address": {{
     "streetAddress": "Street address",
     "addressLocality": "City",
@@ -172,12 +181,14 @@ Extract the business information and return a valid JSON object with this struct
 Important:
 - Only return the JSON object, nothing else
 - Do not include any markdown formatting or code blocks
+- If the input is HTML, parse it to extract text content and look for image URLs in <img> tags
+- Extract image URLs from src attributes in <img> tags if present
 - Extract all mentioned business details
 - Use empty strings for missing information""",
 
             "HowTo": f"""You are an AI assistant that extracts how-to instructions from content.
 
-Given the following content about a how-to guide:
+Given the following content (which may be HTML or plain text):
 {input_text}
 
 Extract the how-to information and return a valid JSON object with this structure:
@@ -195,20 +206,21 @@ Extract the how-to information and return a valid JSON object with this structur
 Important:
 - Only return the JSON object, nothing else
 - Do not include any markdown formatting or code blocks
+- If the input is HTML, parse it to extract text content
 - Extract all steps in order
 - Use ISO 8601 duration format for totalTime (e.g., PT30M for 30 minutes)
 - If time is not specified, estimate based on steps""",
 
             "Recipe": f"""You are an AI assistant that extracts recipe information from content.
 
-Given the following content about a recipe:
+Given the following content (which may be HTML or plain text):
 {input_text}
 
 Extract the recipe information and return a valid JSON object with this structure:
 {{
   "name": "Recipe name",
   "description": "Recipe description",
-  "image": "URL to recipe image (if mentioned)",
+  "image": "URL to recipe image (if found in HTML img tags or mentioned)",
   "author": "Author name",
   "prepTime": "PT15M",
   "cookTime": "PT30M",
@@ -228,12 +240,14 @@ Extract the recipe information and return a valid JSON object with this structur
 Important:
 - Only return the JSON object, nothing else
 - Do not include any markdown formatting or code blocks
+- If the input is HTML, parse it to extract text content and look for image URLs in <img> tags
+- Extract image URLs from src attributes in <img> tags if present
 - Extract all recipe details including ingredients and steps
 - Use ISO 8601 duration format for times (e.g., PT30M for 30 minutes)""",
 
             "Person": f"""You are an AI assistant that extracts person information from content.
 
-Given the following content about a person:
+Given the following content (which may be HTML or plain text):
 {input_text}
 
 Extract the person information and return a valid JSON object with this structure:
@@ -241,7 +255,7 @@ Extract the person information and return a valid JSON object with this structur
   "name": "Full name",
   "jobTitle": "Job title or profession",
   "description": "Brief biography or description",
-  "image": "URL to person's image (if mentioned)",
+  "image": "URL to person's image (if found in HTML img tags or mentioned)",
   "url": "URL to person's website or profile",
   "email": "Email address",
   "telephone": "Phone number",
@@ -255,6 +269,8 @@ Extract the person information and return a valid JSON object with this structur
 Important:
 - Only return the JSON object, nothing else
 - Do not include any markdown formatting or code blocks
+- If the input is HTML, parse it to extract text content and look for image URLs in <img> tags
+- Extract image URLs from src attributes in <img> tags if present
 - Extract all mentioned person details
 - Use empty strings for missing information"""
         }
