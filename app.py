@@ -2,6 +2,39 @@ import streamlit as st
 import json
 import google.generativeai as genai
 import os
+import requests
+from bs4 import BeautifulSoup
+
+def fetch_url_content(url):
+    """Fetch and extract text content from a URL."""
+    try:
+        # Add timeout and headers to avoid blocking
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        # Parse HTML content
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Remove script and style elements
+        for script in soup(['script', 'style', 'nav', 'footer', 'header', 'aside']):
+            script.decompose()
+        
+        # Get text content
+        text = soup.get_text(separator='\n', strip=True)
+        
+        # Clean up extra whitespace
+        lines = [line.strip() for line in text.split('\n') if line.strip()]
+        content = '\n'.join(lines)
+        
+        return content, None
+    except requests.exceptions.RequestException as e:
+        return None, f"Error fetching URL: {str(e)}"
+    except Exception as e:
+        return None, f"Error processing URL content: {str(e)}"
+
 
 def generate_schema_with_ai(input_text, schema_type, api_key):
     """Generate schema data using Gemini AI based on the selected schema type."""
@@ -587,6 +620,13 @@ api_key = st.text_input(
     help="Enter your Google Gemini API key to enable AI-powered schema generation. Get your free API key at https://makersuite.google.com/app/apikey"
 )
 
+# Input mode selection
+input_mode = st.radio(
+    "Select Input Mode:",
+    ["Text Input", "URL Input"],
+    help="Choose whether to paste text directly or fetch content from a URL"
+)
+
 # Dynamic placeholder based on schema type
 placeholders = {
     "FAQPage": """What is Schema.org?
@@ -659,13 +699,24 @@ Location: San Francisco, CA, USA
 Website: https://janesmith.dev"""
 }
 
-# Content input
-content_input = st.text_area(
-    f"Enter {schema_type} Content (AI will extract and structure the information):",
-    height=250,
-    placeholder=placeholders.get(schema_type, ""),
-    key="content_input"
-)
+# Content input based on selected mode
+content_input = ""
+url_input = ""
+
+if input_mode == "Text Input":
+    content_input = st.text_area(
+        f"Enter {schema_type} Content (AI will extract and structure the information):",
+        height=250,
+        placeholder=placeholders.get(schema_type, ""),
+        key="content_input"
+    )
+else:  # URL Input
+    url_input = st.text_input(
+        "Enter URL to fetch content from:",
+        placeholder="https://example.com/page",
+        help="Paste a URL and Gemini will fetch and extract relevant content for the selected schema type",
+        key="url_input"
+    )
 
 # Format selection
 col1, col2 = st.columns(2)
@@ -678,13 +729,30 @@ with col1:
 
 # Generate button
 if st.button("Generate Schema", type="primary"):
-    if not content_input.strip():
+    # Validate inputs based on mode
+    if input_mode == "Text Input" and not content_input.strip():
         st.error("Please enter some content to generate schema.")
+    elif input_mode == "URL Input" and not url_input.strip():
+        st.error("Please enter a URL to fetch content from.")
     elif not api_key:
         st.error("Please provide a Google Gemini API key for AI-powered schema generation.")
     else:
+        # Fetch content from URL if in URL mode
+        final_content = content_input
+        if input_mode == "URL Input":
+            with st.spinner("Fetching content from URL..."):
+                fetched_content, fetch_error = fetch_url_content(url_input)
+                if fetch_error:
+                    st.error(fetch_error)
+                    st.stop()
+                else:
+                    final_content = fetched_content
+                    st.success(f"✅ Successfully fetched content from URL")
+                    with st.expander("View fetched content"):
+                        st.text_area("Fetched Content", final_content, height=200, disabled=True)
+        
         with st.spinner(f"Using AI to generate {schema_type} schema..."):
-            data, error = generate_schema_with_ai(content_input, schema_type, api_key)
+            data, error = generate_schema_with_ai(final_content, schema_type, api_key)
             
             if error:
                 st.error(f"Schema generation failed: {error}")
