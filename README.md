@@ -1,15 +1,16 @@
 # Schema Data Generator
 
-A Streamlit web application that generates Schema.org structured data (JSON-LD and HTML Microdata) from user input content. Perfect for creating FAQPage schema markup that improves your content's visibility in search engines.
+A Streamlit web application that generates Schema.org structured data (JSON-LD and HTML Microdata) from user input content. Supports multiple schema types including FAQPage, Article, Product, Breadcrumb, LocalBusiness, HowTo, Recipe, and Person.
 
 ## Features
 
-- ✨ **AI-Powered Parsing**: Use Google Gemini AI to automatically extract Q&A pairs from any format
-- 🎯 **Multiple Formats**: Generate both JSON-LD and HTML Microdata formats
+- ✨ **AI-Powered Generation**: Use Google Gemini AI to automatically extract and structure content
+- 🎯 **8 Schema Types**: Support for FAQPage, Article, Product, Breadcrumb, LocalBusiness, HowTo, Recipe, and Person
+- 📊 **Multiple Formats**: Generate both JSON-LD and HTML Microdata formats
 - 📥 **Download Schema**: Download generated schema as a file
-- 🎨 **Modern UI**: Clean, responsive Streamlit interface
+- 🎨 **Modern UI**: Clean, responsive Streamlit interface with dynamic examples
 - ⚡ **Fast**: Built with Streamlit for instant results
-- 🔄 **Flexible Input**: No need for Q:/A: prefixes with AI mode
+- 🔄 **Flexible Input**: Natural language input - AI extracts the structure
 
 ## Getting Started
 
@@ -40,42 +41,35 @@ A Streamlit web application that generates Schema.org structured data (JSON-LD a
 
 ### Usage
 
-1. **Get a Gemini API Key (Optional but Recommended)**:
+1. **Get a Gemini API Key (Required)**:
    - Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
    - Sign in with your Google account
    - Create a free API key
    - Copy the key for use in the app
 
-2. **Enter Your FAQ Content**: 
-   - **With AI (Recommended)**: Simply paste your Q&A content in any format. The AI will automatically detect questions and answers:
-     ```
-     What is your return policy?
-     We accept returns within 30 days of purchase with original receipt.
+2. **Select Schema Type**: Choose from:
+   - **FAQPage**: For frequently asked questions
+   - **Article**: For blog posts, news articles, or written content
+   - **Product**: For products with pricing and availability
+   - **Breadcrumb**: For navigation breadcrumb trails
+   - **LocalBusiness**: For physical business locations
+   - **HowTo**: For step-by-step instructions
+   - **Recipe**: For cooking recipes
+   - **Person**: For information about people
 
-     Do you offer international shipping?
-     Yes, we ship to over 100 countries worldwide.
-     ```
-   
-   - **Without AI**: Use the traditional format with Q: and A: prefixes:
-     ```
-     Q: Your question here?
-     A: Your answer here.
+3. **Enter Your Content**: Simply paste your content in natural language. The AI will automatically extract and structure the relevant information based on the selected schema type.
 
-     Q: Another question?
-     A: Another answer.
-     ```
-
-3. **Select Format**: Choose between:
+4. **Select Format**: Choose between:
    - **JSON-LD**: JSON format that can be embedded in `<script type="application/ld+json">` tags
    - **HTML Microdata**: HTML markup with Schema.org microdata attributes
 
-4. **Generate**: Click the "Generate Schema" button to create your schema markup
+5. **Generate**: Click the "Generate Schema" button to create your schema markup
 
-5. **Download**: Click "Download Schema" to save the generated schema to a file
+6. **Download**: Click "Download Schema" to save the generated schema to a file
 
 ## Example
 
-### Input (AI Mode - No prefixes needed):
+### FAQPage Input:
 ```
 What is your return policy?
 We accept returns within 30 days of purchase with original receipt.
@@ -84,16 +78,50 @@ Do you offer international shipping?
 Yes, we ship to over 100 countries worldwide.
 ```
 
-### Input (Traditional Mode):
+### Article Input:
 ```
-Q: What is your return policy?
-A: We accept returns within 30 days of purchase with original receipt.
-
-Q: Do you offer international shipping?
-A: Yes, we ship to over 100 countries worldwide.
+Title: Understanding Machine Learning
+Author: Dr. Sarah Johnson
+Published: 2024-01-15
+Description: A comprehensive introduction to machine learning concepts
+Content: Machine learning is a subset of artificial intelligence that enables systems to learn from data...
 ```
 
-### JSON-LD Output:
+### Product Input:
+```
+Product: Wireless Bluetooth Headphones
+Description: Premium headphones with active noise cancellation
+Brand: AudioPro
+Price: 149.99 USD
+In Stock
+Rating: 4.5 stars, 320 reviews
+```
+
+### Recipe Input:
+```
+Classic Chocolate Chip Cookies
+By Chef Maria
+Soft and chewy cookies perfect for any occasion
+
+Prep: 15 minutes
+Bake: 12 minutes
+Serves: 24
+
+Ingredients:
+- 2 cups flour
+- 1 cup butter
+- 2 eggs
+- 2 cups chocolate chips
+
+Steps:
+1. Preheat oven to 375°F
+2. Mix dry ingredients
+3. Add wet ingredients
+4. Fold in chocolate chips
+5. Bake for 12 minutes
+```
+
+### JSON-LD Output (FAQPage):
 ```json
 {
   "@context": "https://schema.org",
@@ -141,18 +169,30 @@ streamlit run app.py
 
 - Python 3.8+
 - streamlit>=1.28.0
-- google-generativeai>=0.3.0 (for AI-powered parsing)
-- Google Gemini API key (optional, for AI features)
+- google-generativeai>=0.3.0
+- Google Gemini API key (required for AI-powered schema generation)
 
 See `requirements.txt` for full dependency list.
 
-## Schema.org FAQPage Benefits
+## Schema.org Benefits
 
-Adding FAQPage structured data to your website can:
+Adding structured data to your website can:
 - Improve search engine understanding of your content
-- Enable rich results in Google Search with expandable Q&A sections
+- Enable rich results in Google Search (FAQ dropdowns, recipe cards, product info, etc.)
 - Increase click-through rates from search results
 - Enhance your content's discoverability
+- Provide better context for voice assistants and AI
+
+## Supported Schema Types
+
+- **FAQPage**: Frequently asked questions with rich result support in Google Search
+- **Article**: News articles, blog posts, or other written content
+- **Product**: Products with pricing, availability, and rating information
+- **BreadcrumbList**: Navigation breadcrumb trails for better site structure
+- **LocalBusiness**: Physical business locations with contact and hours information
+- **HowTo**: Step-by-step instructions and guides
+- **Recipe**: Cooking recipes with ingredients, instructions, and timing
+- **Person**: Information about individuals (authors, professionals, etc.)
 
 ## Technology Stack
 
@@ -172,8 +212,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## Future Enhancements
 
 Potential features for future versions:
-- Support for other Schema.org types (HowTo, Article, Product, etc.)
 - Validation of generated schema
-- Import/Export functionality
-- Additional input formats
-- Schema templates
+- Import/Export functionality  
+- Additional Schema.org types (Event, Organization, VideoObject, etc.)
+- Schema editing interface
+- Batch processing for multiple schemas
