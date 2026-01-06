@@ -5,8 +5,52 @@ import os
 import requests
 from bs4 import BeautifulSoup
 
+def fetch_url_content_with_gemini(url, api_key):
+    """Fetch and extract content from a URL using Gemini AI.
+    
+    This function uses Gemini's capability to directly access and analyze web content,
+    which bypasses restrictions that may be encountered with traditional HTTP requests.
+    
+    Security Note: This function fetches content from user-provided URLs.
+    Basic validation is implemented to allow only http:// and https:// protocols.
+    """
+    try:
+        # Validate URL scheme
+        if not url.startswith(('http://', 'https://')):
+            return None, "Invalid URL: Only http:// and https:// protocols are supported"
+        
+        # Configure Gemini API
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        
+        # Ask Gemini to fetch and extract the main content from the URL
+        prompt = f"""Please fetch and extract the main textual content from this URL: {url}
+
+Return the content in a clean, readable format. Focus on the main article or page content, excluding:
+- Navigation menus
+- Advertisements
+- Footer content
+- Sidebars
+- Scripts and styles
+
+Just return the extracted text content without any additional commentary or explanation."""
+        
+        response = model.generate_content(prompt)
+        content = response.text.strip()
+        
+        if not content:
+            return None, "No content could be extracted from the URL"
+        
+        return content, None
+    except Exception as e:
+        return None, f"Error fetching URL with Gemini: {str(e)}"
+
+
 def fetch_url_content(url):
-    """Fetch and extract raw HTML content from a URL.
+    """Fetch and extract raw HTML content from a URL (fallback method).
+    
+    This is a fallback method that uses traditional HTTP requests.
+    The primary method should use Gemini AI for better compatibility.
     
     Security Note: This function fetches content from user-provided URLs.
     Basic validation is implemented to allow only http:// and https:// protocols.
@@ -766,16 +810,24 @@ if st.button("Generate Schema", type="primary"):
         # Fetch content from URL if in URL mode
         final_content = content_input
         if input_mode == "URL Input":
-            with st.spinner("Fetching content from URL..."):
-                fetched_content, fetch_error = fetch_url_content(url_input)
+            with st.spinner("Fetching content from URL using Gemini AI..."):
+                # Try Gemini-based fetching first (better compatibility, bypasses 403 errors)
+                fetched_content, fetch_error = fetch_url_content_with_gemini(url_input, api_key)
+                
+                # If Gemini fetch fails, try traditional HTTP request as fallback
                 if fetch_error:
-                    st.error(fetch_error)
-                    st.stop()
-                else:
-                    final_content = fetched_content
-                    st.success("✅ Successfully fetched content from URL")
-                    with st.expander("View fetched content"):
-                        st.text_area("Fetched Content", final_content, height=200, disabled=True)
+                    st.warning(f"Gemini fetch encountered an issue: {fetch_error}")
+                    st.info("Trying traditional HTTP request as fallback...")
+                    fetched_content, fetch_error = fetch_url_content(url_input)
+                    
+                    if fetch_error:
+                        st.error(f"Both fetch methods failed. Error: {fetch_error}")
+                        st.stop()
+                
+                final_content = fetched_content
+                st.success("✅ Successfully fetched content from URL")
+                with st.expander("View fetched content"):
+                    st.text_area("Fetched Content", final_content, height=200, disabled=True)
         
         with st.spinner(f"Using AI to generate {schema_type} schema..."):
             data, error = generate_schema_with_ai(final_content, schema_type, api_key)
