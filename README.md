@@ -5,7 +5,10 @@ A Streamlit web application that generates Schema.org structured data (JSON-LD a
 ## Features
 
 - ✨ **AI-Powered Generation**: Use Google Gemini AI to automatically extract and structure content
-- 🌐 **URL-Based Fetching**: Paste a URL and automatically fetch content from any web page
+- 🌐 **Enhanced URL Fetching**: Paste a URL and automatically fetch content from any web page
+  - **Bypasses 403 Errors**: Uses enhanced HTTP headers and Gemini AI to access restricted content
+  - **Intelligent Extraction**: Gemini AI extracts main content while filtering out ads, navigation, and clutter
+  - **Fallback Support**: Automatically falls back to traditional HTTP if needed
 - 🎯 **8 Schema Types**: Support for FAQPage, Article, Product, Breadcrumb, LocalBusiness, HowTo, Recipe, and Person
 - 📊 **Multiple Formats**: Generate both JSON-LD and HTML Microdata formats
 - 📥 **Download Schema**: Download generated schema as a file
@@ -98,6 +101,13 @@ You can also use URL input mode to automatically fetch content from web pages:
 - **LocalBusiness Schema**: Paste a business website URL
 
 The app will automatically fetch the page content and use AI to extract relevant information based on your selected schema type.
+
+**How URL Fetching Works:**
+1. **Enhanced HTTP Request**: First, the app attempts to fetch the URL using enhanced HTTP headers that mimic a real browser, which helps bypass many 403 Forbidden errors and other restrictions.
+2. **Gemini AI Extraction**: Once the HTML is fetched, Gemini AI intelligently extracts the main content while filtering out navigation menus, advertisements, footers, and other non-essential elements.
+3. **Fallback Mechanism**: If the enhanced method encounters issues, the app automatically falls back to traditional HTTP requests for maximum compatibility.
+
+This dual approach ensures reliable content fetching from a wide variety of websites, even those with restrictive access policies.
 
 ### Article Input:
 ```
