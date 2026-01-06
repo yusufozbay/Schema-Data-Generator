@@ -1,5 +1,54 @@
 import streamlit as st
 import json
+import google.generativeai as genai
+import os
+
+def parse_faq_with_ai(input_text, api_key):
+    """Parse FAQ input text using Gemini AI to extract questions and answers."""
+    try:
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        
+        prompt = f"""You are an AI assistant that extracts questions and answers from FAQ content.
+
+Given the following FAQ content, identify all question and answer pairs. The content may or may not have Q: and A: prefixes.
+
+FAQ Content:
+{input_text}
+
+Extract each question and its corresponding answer, and return the result as a valid JSON array with this exact structure:
+[
+  {{"question": "First question text here", "answer": "First answer text here"}},
+  {{"question": "Second question text here", "answer": "Second answer text here"}}
+]
+
+Important:
+- Only return the JSON array, nothing else
+- Do not include any markdown formatting or code blocks
+- Ensure the JSON is valid and properly formatted
+- Extract all question-answer pairs in the order they appear
+- Remove any Q: or A: prefixes if present
+- If the content doesn't contain clear Q&A pairs, return an empty array []"""
+
+        response = model.generate_content(prompt)
+        result_text = response.text.strip()
+        
+        # Remove markdown code blocks if present
+        if result_text.startswith('```json'):
+            result_text = result_text[7:]
+        elif result_text.startswith('```'):
+            result_text = result_text[3:]
+        if result_text.endswith('```'):
+            result_text = result_text[:-3]
+        result_text = result_text.strip()
+        
+        # Parse the JSON response
+        faqs = json.loads(result_text)
+        return faqs, None
+    except json.JSONDecodeError as e:
+        return [], f"Failed to parse AI response as JSON: {str(e)}"
+    except Exception as e:
+        return [], f"AI parsing error: {str(e)}"
 
 def parse_faq_input(input_text):
     """Parse FAQ input text into structured questions and answers."""
@@ -115,15 +164,22 @@ st.markdown("**Generate JSON-LD and HTML Microdata for your content**")
 # Main content
 st.header("Input Your Content")
 
+# API Key input
+api_key = st.text_input(
+    "Google Gemini API Key (optional - for AI-powered parsing):",
+    type="password",
+    help="Enter your Google Gemini API key to enable AI-powered FAQ parsing. Get your free API key at https://makersuite.google.com/app/apikey"
+)
+
 # FAQ input
 faq_input = st.text_area(
-    "Enter FAQ Questions and Answers (one Q&A pair per section, separated by blank lines):",
+    "Enter FAQ Questions and Answers (paste your Q&A content - AI will extract questions and answers automatically):",
     height=200,
-    placeholder="""Q: What is Schema.org?
-A: Schema.org is a collaborative initiative to create structured data schemas for the web.
+    placeholder="""What is Schema.org?
+Schema.org is a collaborative initiative to create structured data schemas for the web.
 
-Q: Why use structured data?
-A: Structured data helps search engines understand your content better and can improve your search appearance.""",
+Why use structured data?
+Structured data helps search engines understand your content better and can improve your search appearance.""",
     key="faq_input"
 )
 
@@ -141,10 +197,24 @@ if st.button("Generate Schema", type="primary"):
     if not faq_input.strip():
         st.error("Please enter some FAQ content to generate schema.")
     else:
-        faqs = parse_faq_input(faq_input)
+        # Try AI parsing first if API key is provided
+        if api_key:
+            with st.spinner("Using AI to extract questions and answers..."):
+                faqs, error = parse_faq_with_ai(faq_input, api_key)
+                if error:
+                    st.warning(f"AI parsing failed: {error}. Falling back to traditional parsing.")
+                    faqs = parse_faq_input(faq_input)
+                else:
+                    st.info(f"✨ AI successfully extracted {len(faqs)} Q&A pair(s)")
+        else:
+            # Fall back to traditional parsing
+            faqs = parse_faq_input(faq_input)
         
         if len(faqs) == 0:
-            st.error("Could not parse FAQ content. Please make sure to format your input with 'Q:' and 'A:' prefixes.")
+            if api_key:
+                st.error("Could not parse FAQ content. Please make sure your content contains clear question and answer pairs.")
+            else:
+                st.error("Could not parse FAQ content. Please either:\n1. Provide a Gemini API key for AI-powered parsing, or\n2. Format your input with 'Q:' and 'A:' prefixes.")
         else:
             st.header("Generated Schema Output")
             
@@ -168,9 +238,22 @@ if st.button("Generate Schema", type="primary"):
 
 # Example section
 st.markdown("---")
-st.subheader("💡 Example Input Format")
+st.subheader("💡 Example Input Formats")
 st.markdown("""
 <div class="example-box">
+<strong>With AI (Recommended):</strong>
+<pre>What is your return policy?
+We accept returns within 30 days of purchase with original receipt.
+
+Do you offer international shipping?
+Yes, we ship to over 100 countries worldwide.
+
+How long does delivery take?
+Standard delivery takes 3-5 business days, express delivery 1-2 days.</pre>
+</div>
+
+<div class="example-box">
+<strong>Traditional Format (without API key):</strong>
 <pre>Q: What is your return policy?
 A: We accept returns within 30 days of purchase with original receipt.
 
@@ -193,6 +276,14 @@ with st.expander("ℹ️ About Schema.org FAQPage"):
     - Enable rich results in Google Search with expandable Q&A sections
     - Increase click-through rates from search results
     - Enhance your content's discoverability
+    
+    ### AI-Powered Parsing
+    
+    With a Google Gemini API key, you can:
+    - Paste FAQ content in any format - the AI will automatically detect questions and answers
+    - No need to manually add Q: and A: prefixes
+    - Support for multiple Q&A pairs in various formats
+    - Get your free API key at [Google AI Studio](https://makersuite.google.com/app/apikey)
     
     ### How to Use the Generated Schema
     
