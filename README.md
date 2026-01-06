@@ -4,11 +4,12 @@ A Streamlit web application that generates Schema.org structured data (JSON-LD a
 
 ## Features
 
-- ✨ **Easy to Use**: Simple textarea input for FAQ content
+- ✨ **AI-Powered Parsing**: Use Google Gemini AI to automatically extract Q&A pairs from any format
 - 🎯 **Multiple Formats**: Generate both JSON-LD and HTML Microdata formats
 - 📥 **Download Schema**: Download generated schema as a file
 - 🎨 **Modern UI**: Clean, responsive Streamlit interface
 - ⚡ **Fast**: Built with Streamlit for instant results
+- 🔄 **Flexible Input**: No need for Q:/A: prefixes with AI mode
 
 ## Getting Started
 
@@ -39,26 +40,51 @@ A Streamlit web application that generates Schema.org structured data (JSON-LD a
 
 ### Usage
 
-1. **Enter Your FAQ Content**: In the input textarea, enter your questions and answers using this format:
-   ```
-   Q: Your question here?
-   A: Your answer here.
+1. **Get a Gemini API Key (Optional but Recommended)**:
+   - Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Sign in with your Google account
+   - Create a free API key
+   - Copy the key for use in the app
 
-   Q: Another question?
-   A: Another answer.
-   ```
+2. **Enter Your FAQ Content**: 
+   - **With AI (Recommended)**: Simply paste your Q&A content in any format. The AI will automatically detect questions and answers:
+     ```
+     What is your return policy?
+     We accept returns within 30 days of purchase with original receipt.
 
-2. **Select Format**: Choose between:
+     Do you offer international shipping?
+     Yes, we ship to over 100 countries worldwide.
+     ```
+   
+   - **Without AI**: Use the traditional format with Q: and A: prefixes:
+     ```
+     Q: Your question here?
+     A: Your answer here.
+
+     Q: Another question?
+     A: Another answer.
+     ```
+
+3. **Select Format**: Choose between:
    - **JSON-LD**: JSON format that can be embedded in `<script type="application/ld+json">` tags
    - **HTML Microdata**: HTML markup with Schema.org microdata attributes
 
-3. **Generate**: Click the "Generate Schema" button to create your schema markup
+4. **Generate**: Click the "Generate Schema" button to create your schema markup
 
-4. **Download**: Click "Download Schema" to save the generated schema to a file
+5. **Download**: Click "Download Schema" to save the generated schema to a file
 
 ## Example
 
-### Input:
+### Input (AI Mode - No prefixes needed):
+```
+What is your return policy?
+We accept returns within 30 days of purchase with original receipt.
+
+Do you offer international shipping?
+Yes, we ship to over 100 countries worldwide.
+```
+
+### Input (Traditional Mode):
 ```
 Q: What is your return policy?
 A: We accept returns within 30 days of purchase with original receipt.
@@ -115,6 +141,8 @@ streamlit run app.py
 
 - Python 3.8+
 - streamlit>=1.28.0
+- google-generativeai>=0.3.0 (for AI-powered parsing)
+- Google Gemini API key (optional, for AI features)
 
 See `requirements.txt` for full dependency list.
 
@@ -130,6 +158,7 @@ Adding FAQPage structured data to your website can:
 
 - **Streamlit**: Modern Python framework for building web apps
 - **Python**: Core logic and schema generation
+- **Google Gemini AI**: Advanced AI for intelligent Q&A extraction
 - **JSON**: Data interchange format for JSON-LD schemas
 
 ## License
