@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schema Data Generator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .format-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .format-option {
+            flex: 1;
+        }
+
+        .format-option input[type="radio"] {
+            margin-right: 8px;
+        }
+
+        .format-option label {
+            display: inline;
+            cursor: pointer;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .output-area {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            border: 2px solid #e0e0e0;
+            position: relative;
+        }
+
+        .output-content {
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            min-height: 200px;
+            max-height: 500px;
+            overflow: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .example-section {
+            background: #f0f4ff;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+
+        .example-section h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .example-section pre {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+
+        .copy-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4caf50;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 1000;
+        }
+
+        .copy-notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .button-group {
+            margin-top: 15px;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            .format-selector {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="copy-notification" id="copyNotification">Copied to clipboard!</div>
+
+    <div class="container">
+        <header>
+            <h1>📋 Schema Data Generator</h1>
+            <p>Generate JSON-LD and HTML Microdata for your content</p>
+        </header>
+
+        <div class="content">
+            <div class="section">
+                <h2>Input Your Content</h2>
+                <div class="input-group">
+                    <label for="faqInput">Enter FAQ Questions and Answers (one Q&A pair per section, separated by blank lines):</label>
+                    <textarea id="faqInput" rows="10" placeholder="Q: What is Schema.org?
+A: Schema.org is a collaborative initiative to create structured data schemas for the web.
+
+Q: Why use structured data?
+A: Structured data helps search engines understand your content better and can improve your search appearance."></textarea>
+                </div>
+
+                <div class="format-selector">
+                    <div class="format-option">
+                        <input type="radio" id="jsonld" name="format" value="jsonld" checked>
+                        <label for="jsonld">JSON-LD</label>
+                    </div>
+                    <div class="format-option">
+                        <input type="radio" id="microdata" name="format" value="microdata">
+                        <label for="microdata">HTML Microdata</label>
+                    </div>
+                </div>
+
+                <button onclick="generateSchema()">Generate Schema</button>
+            </div>
+
+            <div class="section">
+                <h2>Generated Schema Output</h2>
+                <div class="output-area">
+                    <div class="output-content" id="output">Your generated schema will appear here...</div>
+                </div>
+                <div class="button-group">
+                    <button onclick="copyToClipboard()">Copy to Clipboard</button>
+                </div>
+            </div>
+
+            <div class="example-section">
+                <h3>💡 Example Input Format</h3>
+                <pre>Q: What is your return policy?
+A: We accept returns within 30 days of purchase with original receipt.
+
+Q: Do you offer international shipping?
+A: Yes, we ship to over 100 countries worldwide.
+
+Q: How long does delivery take?
+A: Standard delivery takes 3-5 business days, express delivery 1-2 days.</pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function parseFAQInput(input) {
+            const faqs = [];
+            const sections = input.trim().split(/\n\s*\n/);
+            
+            for (const section of sections) {
+                const lines = section.trim().split('\n');
+                let question = '';
+                let answer = '';
+                
+                for (const line of lines) {
+                    const trimmedLine = line.trim();
+                    if (trimmedLine.match(/^Q:/i)) {
+                        question = trimmedLine.replace(/^Q:\s*/i, '').trim();
+                    } else if (trimmedLine.match(/^A:/i)) {
+                        answer = trimmedLine.replace(/^A:\s*/i, '').trim();
+                    } else if (question && !answer) {
+                        question += ' ' + trimmedLine;
+                    } else if (answer) {
+                        answer += ' ' + trimmedLine;
+                    }
+                }
+                
+                if (question && answer) {
+                    faqs.push({ question, answer });
+                }
+            }
+            
+            return faqs;
+        }
+
+        function generateJSONLD(faqs) {
+            const schema = {
+                "@context": "https://schema.org",
+                "@type": "FAQPage",
+                "mainEntity": faqs.map(faq => ({
+                    "@type": "Question",
+                    "name": faq.question,
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": faq.answer
+                    }
+                }))
+            };
+            
+            return JSON.stringify(schema, null, 2);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function generateMicrodata(faqs) {
+            let html = '<div itemscope itemtype="https://schema.org/FAQPage">\n';
+            
+            for (const faq of faqs) {
+                html += '  <div itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">\n';
+                html += `    <h3 itemprop="name">${escapeHtml(faq.question)}</h3>\n`;
+                html += '    <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">\n';
+                html += `      <div itemprop="text">${escapeHtml(faq.answer)}</div>\n`;
+                html += '    </div>\n';
+                html += '  </div>\n';
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        function generateSchema() {
+            const input = document.getElementById('faqInput').value;
+            const format = document.querySelector('input[name="format"]:checked').value;
+            const output = document.getElementById('output');
+            
+            if (!input.trim()) {
+                output.textContent = 'Please enter some FAQ content to generate schema.';
+                return;
+            }
+            
+            const faqs = parseFAQInput(input);
+            
+            if (faqs.length === 0) {
+                output.textContent = 'Could not parse FAQ content. Please make sure to format your input with "Q:" and "A:" prefixes.';
+                return;
+            }
+            
+            let result;
+            if (format === 'jsonld') {
+                result = generateJSONLD(faqs);
+            } else {
+                result = generateMicrodata(faqs);
+            }
+            
+            output.textContent = result;
+        }
+
+        function copyToClipboard() {
+            const output = document.getElementById('output');
+            const text = output.textContent;
+            
+            if (!text || text === 'Your generated schema will appear here...') {
+                return;
+            }
+            
+            navigator.clipboard.writeText(text).then(() => {
+                showCopyNotification();
+            }).catch(err => {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showCopyNotification();
+            });
+        }
+
+        function showCopyNotification() {
+            const notification = document.getElementById('copyNotification');
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 2000);
+        }
+
+        // Allow Enter key to generate
+        document.getElementById('faqInput').addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                generateSchema();
+            }
+        });
+    </script>
+</body>
+</html>
