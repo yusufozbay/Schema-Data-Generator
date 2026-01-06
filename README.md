@@ -1,18 +1,23 @@
 # Schema Data Generator
 
-A web application that generates Schema.org structured data (JSON-LD and HTML Microdata) from user input content. Perfect for creating FAQPage schema markup that improves your content's visibility in search engines.
+A Streamlit web application that generates Schema.org structured data (JSON-LD and HTML Microdata) from user input content. Perfect for creating FAQPage schema markup that improves your content's visibility in search engines.
 
 ## Features
 
 - ✨ **Easy to Use**: Simple textarea input for FAQ content
 - 🎯 **Multiple Formats**: Generate both JSON-LD and HTML Microdata formats
-- 📋 **Copy to Clipboard**: One-click copying of generated schema
-- 🎨 **Modern UI**: Clean, responsive design that works on all devices
-- ⚡ **No Build Required**: Pure HTML/CSS/JavaScript - just open and use
+- 📥 **Download Schema**: Download generated schema as a file
+- 🎨 **Modern UI**: Clean, responsive Streamlit interface
+- ⚡ **Fast**: Built with Streamlit for instant results
 
 ## Getting Started
 
-### Quick Start
+### Prerequisites
+
+- Python 3.8 or higher
+- pip (Python package installer)
+
+### Installation
 
 1. Clone this repository:
    ```bash
@@ -20,10 +25,17 @@ A web application that generates Schema.org structured data (JSON-LD and HTML Mi
    cd Schema-Data-Generator
    ```
 
-2. Open `index.html` in your web browser:
-   - Double-click the file, or
-   - Right-click and select "Open with" your preferred browser, or
-   - Use a local server: `python -m http.server 8000` (then visit http://localhost:8000)
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Run the application:
+   ```bash
+   streamlit run app.py
+   ```
+
+4. Open your web browser and navigate to `http://localhost:8501`
 
 ### Usage
 
@@ -42,7 +54,7 @@ A web application that generates Schema.org structured data (JSON-LD and HTML Mi
 
 3. **Generate**: Click the "Generate Schema" button to create your schema markup
 
-4. **Copy**: Click "Copy to Clipboard" to copy the generated schema for use in your website
+4. **Download**: Click "Download Schema" to save the generated schema to a file
 
 ## Example
 
@@ -81,6 +93,31 @@ A: Yes, we ship to over 100 countries worldwide.
 }
 ```
 
+## Deployment
+
+### Deploy to Streamlit Cloud
+
+1. Push your code to GitHub
+2. Go to [share.streamlit.io](https://share.streamlit.io)
+3. Sign in with your GitHub account
+4. Click "New app" and select this repository
+5. Set the main file path to `app.py`
+6. Click "Deploy"
+
+### Local Development
+
+For local development with auto-reload:
+```bash
+streamlit run app.py
+```
+
+## Requirements
+
+- Python 3.8+
+- streamlit>=1.28.0
+
+See `requirements.txt` for full dependency list.
+
 ## Schema.org FAQPage Benefits
 
 Adding FAQPage structured data to your website can:
@@ -89,13 +126,11 @@ Adding FAQPage structured data to your website can:
 - Increase click-through rates from search results
 - Enhance your content's discoverability
 
-## Browser Compatibility
+## Technology Stack
 
-Works with all modern browsers:
-- Chrome/Edge (latest)
-- Firefox (latest)
-- Safari (latest)
-- Opera (latest)
+- **Streamlit**: Modern Python framework for building web apps
+- **Python**: Core logic and schema generation
+- **JSON**: Data interchange format for JSON-LD schemas
 
 ## License
 
