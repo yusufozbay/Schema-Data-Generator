@@ -80,7 +80,7 @@ def fetch_url_content_with_gemini(url, api_key):
                 response.raise_for_status()
                 break  # Success, exit retry loop
             except requests.exceptions.HTTPError as e:
-                if attempt < max_retries - 1 and e.response.status_code in [403, 429, 503]:
+                if attempt < max_retries - 1 and e.response and e.response.status_code in [403, 429, 503]:
                     # Wait before retry with exponential backoff
                     time.sleep(2 ** attempt)
                     continue
@@ -189,7 +189,7 @@ def fetch_url_content(url):
                 response.raise_for_status()
                 break  # Success, exit retry loop
             except requests.exceptions.HTTPError as e:
-                if attempt < max_retries - 1 and e.response.status_code in [403, 429, 503]:
+                if attempt < max_retries - 1 and e.response and e.response.status_code in [403, 429, 503]:
                     # Wait before retry with exponential backoff
                     time.sleep(2 ** attempt)
                     continue
