@@ -155,7 +155,8 @@ Important:
 - Extract all question-answer pairs in the order they appear
 - Remove any Q: or A: prefixes if present
 - If the input is HTML, parse it to extract the text content
-- If the content doesn't contain clear Q&A pairs, return {{"mainEntity": []}}""",
+- If the content doesn't contain clear Q&A pairs, return {{"mainEntity": []}}
+- CRITICAL: Preserve the EXACT original language of the content. Do NOT translate any text. If the content is in Turkish, German, French, or any other language, keep it in that language.""",
 
             "Article": f"""You are an AI assistant that extracts article information from content.
 
@@ -180,7 +181,8 @@ Important:
 - If the input is HTML, parse it to extract text content and look for image URLs in <img> tags
 - Extract image URLs from src attributes in <img> tags if present
 - If a field is not found, use a reasonable default or empty string
-- Extract information intelligently from the provided content""",
+- Extract information intelligently from the provided content
+- CRITICAL: Preserve the EXACT original language of the content. Do NOT translate any text. If the content is in Turkish, German, French, or any other language, keep it in that language.""",
 
             "Product": f"""You are an AI assistant that extracts product information from content.
 
@@ -210,7 +212,8 @@ Important:
 - If the input is HTML, parse it to extract text content and look for image URLs in <img> tags
 - Extract image URLs from src attributes in <img> tags if present
 - Extract all mentioned product details
-- Use reasonable defaults for missing information""",
+- Use reasonable defaults for missing information
+- CRITICAL: Preserve the EXACT original language of the content. Do NOT translate any text. If the content is in Turkish, German, French, or any other language, keep it in that language.""",
 
             "Breadcrumb": f"""You are an AI assistant that extracts breadcrumb navigation from content.
 
@@ -231,7 +234,8 @@ Important:
 - Do not include any markdown formatting or code blocks
 - If the input is HTML, look for breadcrumb navigation elements and extract links from <a> tags
 - Extract breadcrumb items in order
-- If URLs are not provided, use placeholder URLs like https://example.com""",
+- If URLs are not provided, use placeholder URLs like https://example.com
+- CRITICAL: Preserve the EXACT original language of the content. Do NOT translate any text. If the content is in Turkish, German, French, or any other language, keep it in that language.""",
 
             "LocalBusiness": f"""You are an AI assistant that extracts local business information from content.
 
@@ -261,7 +265,8 @@ Important:
 - If the input is HTML, parse it to extract text content and look for image URLs in <img> tags
 - Extract image URLs from src attributes in <img> tags if present
 - Extract all mentioned business details
-- Use empty strings for missing information""",
+- Use empty strings for missing information
+- CRITICAL: Preserve the EXACT original language of the content. Do NOT translate any text. If the content is in Turkish, German, French, or any other language, keep it in that language.""",
 
             "HowTo": f"""You are an AI assistant that extracts how-to instructions from content.
 
@@ -286,7 +291,8 @@ Important:
 - If the input is HTML, parse it to extract text content
 - Extract all steps in order
 - Use ISO 8601 duration format for totalTime (e.g., PT30M for 30 minutes)
-- If time is not specified, estimate based on steps""",
+- If time is not specified, estimate based on steps
+- CRITICAL: Preserve the EXACT original language of the content. Do NOT translate any text. If the content is in Turkish, German, French, or any other language, keep it in that language.""",
 
             "Recipe": f"""You are an AI assistant that extracts recipe information from content.
 
@@ -320,7 +326,8 @@ Important:
 - If the input is HTML, parse it to extract text content and look for image URLs in <img> tags
 - Extract image URLs from src attributes in <img> tags if present
 - Extract all recipe details including ingredients and steps
-- Use ISO 8601 duration format for times (e.g., PT30M for 30 minutes)""",
+- Use ISO 8601 duration format for times (e.g., PT30M for 30 minutes)
+- CRITICAL: Preserve the EXACT original language of the content. Do NOT translate any text. If the content is in Turkish, German, French, or any other language, keep it in that language.""",
 
             "Person": f"""You are an AI assistant that extracts person information from content.
 
@@ -349,7 +356,8 @@ Important:
 - If the input is HTML, parse it to extract text content and look for image URLs in <img> tags
 - Extract image URLs from src attributes in <img> tags if present
 - Extract all mentioned person details
-- Use empty strings for missing information"""
+- Use empty strings for missing information
+- CRITICAL: Preserve the EXACT original language of the content. Do NOT translate any text. If the content is in Turkish, German, French, or any other language, keep it in that language."""
         }
         
         prompt = prompts.get(schema_type, prompts["FAQPage"])
