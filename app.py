@@ -8,6 +8,11 @@ from bs4 import BeautifulSoup
 
 # Constants
 MAX_HTML_CONTENT_LENGTH = 50000  # Maximum HTML content length to send to Gemini (in characters)
+MAX_RETRIES = 3  # Maximum number of retry attempts for failed requests
+BASE_RETRY_DELAY = 2  # Base delay in seconds for exponential backoff (2^attempt)
+RETRYABLE_STATUS_CODES = [403, 429, 503]  # HTTP status codes that should trigger a retry
+PRIMARY_FETCH_TIMEOUT = 20  # Timeout in seconds for primary fetch method (longer for Gemini processing)
+FALLBACK_FETCH_TIMEOUT = 15  # Timeout in seconds for fallback fetch method
 
 def fetch_url_content_with_gemini(url, api_key):
     """Fetch and extract content from a URL with Gemini AI assistance.
@@ -73,16 +78,15 @@ def fetch_url_content_with_gemini(url, api_key):
         }
         
         # Try to fetch the URL with retry logic
-        max_retries = 3
-        for attempt in range(max_retries):
+        for attempt in range(MAX_RETRIES):
             try:
-                response = session.get(url, headers=headers, timeout=20, allow_redirects=True)
+                response = session.get(url, headers=headers, timeout=PRIMARY_FETCH_TIMEOUT, allow_redirects=True)
                 response.raise_for_status()
                 break  # Success, exit retry loop
             except requests.exceptions.HTTPError as e:
-                if attempt < max_retries - 1 and e.response and e.response.status_code in [403, 429, 503]:
+                if attempt < MAX_RETRIES - 1 and e.response and e.response.status_code in RETRYABLE_STATUS_CODES:
                     # Wait before retry with exponential backoff
-                    time.sleep(2 ** attempt)
+                    time.sleep(BASE_RETRY_DELAY ** attempt)
                     continue
                 else:
                     raise  # Re-raise if last attempt or non-retryable error
@@ -182,16 +186,15 @@ def fetch_url_content(url):
         }
         
         # Try to fetch the URL with retry logic
-        max_retries = 3
-        for attempt in range(max_retries):
+        for attempt in range(MAX_RETRIES):
             try:
-                response = session.get(url, headers=headers, timeout=15, allow_redirects=True)
+                response = session.get(url, headers=headers, timeout=FALLBACK_FETCH_TIMEOUT, allow_redirects=True)
                 response.raise_for_status()
                 break  # Success, exit retry loop
             except requests.exceptions.HTTPError as e:
-                if attempt < max_retries - 1 and e.response and e.response.status_code in [403, 429, 503]:
+                if attempt < MAX_RETRIES - 1 and e.response and e.response.status_code in RETRYABLE_STATUS_CODES:
                     # Wait before retry with exponential backoff
-                    time.sleep(2 ** attempt)
+                    time.sleep(BASE_RETRY_DELAY ** attempt)
                     continue
                 else:
                     raise  # Re-raise if last attempt or non-retryable error
