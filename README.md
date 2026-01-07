@@ -5,10 +5,10 @@ A Streamlit web application that generates Schema.org structured data (JSON-LD a
 ## Features
 
 - ✨ **AI-Powered Generation**: Use Google Gemini AI to automatically extract and structure content
-- 🌐 **Enhanced URL Fetching**: Paste a URL and automatically fetch content from any web page
-  - **Bypasses 403 Errors**: Gemini AI directly accesses URLs, bypassing traditional HTTP restrictions
-  - **Intelligent Extraction**: Gemini AI extracts main content while filtering out ads, navigation, and clutter
-  - **Fallback Support**: Automatically falls back to traditional HTTP if needed
+- 🌐 **URL Fetching**: Paste a URL and automatically fetch raw HTML content from any web page
+  - **Standard HTTP Requests**: Fetches content using reliable HTTP requests with retry logic
+  - **Raw Content Delivery**: Returns exactly what's on the page without interpretation
+  - **AI Schema Extraction**: Gemini AI processes the raw HTML only during schema generation to extract needed values
 - 🎯 **8 Schema Types**: Support for FAQPage, Article, Product, Breadcrumb, LocalBusiness, HowTo, Recipe, and Person
 - 📊 **Multiple Formats**: Generate both JSON-LD and HTML Microdata formats
 - 📥 **Download Schema**: Download generated schema as a file
@@ -100,14 +100,14 @@ You can also use URL input mode to automatically fetch content from web pages:
 - **FAQPage Schema**: Paste an FAQ page URL
 - **LocalBusiness Schema**: Paste a business website URL
 
-The app will automatically fetch the page content and use AI to extract relevant information based on your selected schema type.
+The app will automatically fetch the raw HTML content from the URL and use Gemini AI to extract relevant information based on your selected schema type.
 
 **How URL Fetching Works:**
-1. **Gemini AI Direct Fetch**: First, the app uses Gemini AI to directly fetch and process the URL. Gemini's built-in web access capabilities bypass many 403 Forbidden errors and other access restrictions that traditional HTTP requests encounter.
-2. **Intelligent Content Extraction**: Gemini AI intelligently extracts the main content while filtering out navigation menus, advertisements, footers, and other non-essential elements.
-3. **Fallback Mechanism**: If the Gemini method encounters issues, the app automatically falls back to traditional HTTP requests with enhanced headers for maximum compatibility.
+1. **HTTP Fetch**: The app uses standard HTTP requests to fetch the raw HTML content from the URL.
+2. **Raw Content Delivery**: The fetched HTML is delivered without interpretation or filtering - exactly as it appears on the web page.
+3. **AI Schema Extraction**: Gemini AI processes the raw HTML content during schema generation, extracting only the values needed to fill the selected schema type.
 
-This dual approach ensures reliable content fetching from a wide variety of websites, even those with restrictive access policies.
+This approach ensures that Gemini AI works with the exact content from the URL, using it to populate schema fields accurately.
 
 ### Article Input:
 ```
