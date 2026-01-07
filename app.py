@@ -4,7 +4,6 @@ import google.generativeai as genai
 import os
 import requests
 import time
-from bs4 import BeautifulSoup
 
 # Constants for fallback HTTP method
 MAX_RETRIES = 3  # Maximum number of retry attempts for failed requests
@@ -110,7 +109,8 @@ def fetch_url_content(url):
 def fetch_url_with_fallback(url, api_key):
     """Fetch raw HTML content from a URL using HTTP requests.
     
-    This function fetches raw HTML content directly from URLs using standard HTTP requests.
+    Note: This function name is kept for backward compatibility. There is no longer
+    a fallback mechanism - it directly calls fetch_url_content to fetch raw HTML.
     The fetched content will be processed by Gemini AI only during schema generation.
     
     Args:
