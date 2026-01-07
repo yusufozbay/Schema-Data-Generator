@@ -130,7 +130,7 @@ def generate_schema_with_ai(input_text, schema_type, api_key):
     """Generate schema data using Gemini AI based on the selected schema type."""
     try:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        model = genai.GenerativeModel('gemini-2.5-pro')
         
         prompts = {
             "FAQPage": f"""You are an AI assistant that extracts questions and answers from FAQ content.
