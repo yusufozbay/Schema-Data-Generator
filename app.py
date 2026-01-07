@@ -3,6 +3,7 @@ import json
 import google.generativeai as genai
 import os
 import requests
+import time
 from bs4 import BeautifulSoup
 
 # Constants
@@ -49,23 +50,42 @@ def fetch_url_content_with_gemini(url, api_key):
                 hostname_lower.startswith('169.254.')):
                 return None, "Invalid URL: Access to internal/private networks is not allowed"
         
-        # Fetch URL with enhanced headers and retry logic
+        # Create a session to maintain cookies and connection pooling
+        session = requests.Session()
+        
+        # Fetch URL with enhanced headers that closely mimic a real browser
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.9,tr;q=0.8',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'Accept-Language': 'en-US,en;q=0.9,tr-TR;q=0.8,tr;q=0.7',
             'Accept-Encoding': 'gzip, deflate, br',
+            'DNT': '1',
             'Connection': 'keep-alive',
             'Upgrade-Insecure-Requests': '1',
             'Sec-Fetch-Dest': 'document',
             'Sec-Fetch-Mode': 'navigate',
             'Sec-Fetch-Site': 'none',
-            'Cache-Control': 'max-age=0'
+            'Sec-Fetch-User': '?1',
+            'Cache-Control': 'max-age=0',
+            'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"Windows"'
         }
         
-        # Try to fetch the URL
-        response = requests.get(url, headers=headers, timeout=15, allow_redirects=True)
-        response.raise_for_status()
+        # Try to fetch the URL with retry logic
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = session.get(url, headers=headers, timeout=20, allow_redirects=True)
+                response.raise_for_status()
+                break  # Success, exit retry loop
+            except requests.exceptions.HTTPError as e:
+                if attempt < max_retries - 1 and e.response.status_code in [403, 429, 503]:
+                    # Wait before retry with exponential backoff
+                    time.sleep(2 ** attempt)
+                    continue
+                else:
+                    raise  # Re-raise if last attempt or non-retryable error
         
         # Get the raw HTML content
         html_content = response.text
@@ -144,12 +164,37 @@ def fetch_url_content(url):
                 hostname_lower.startswith('169.254.')):
                 return None, "Invalid URL: Access to internal/private networks is not allowed"
         
-        # Add timeout and headers to avoid blocking
+        # Create a session to maintain cookies and connection pooling
+        session = requests.Session()
+        
+        # Add comprehensive headers to mimic a real browser
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'Accept-Language': 'en-US,en;q=0.9,tr-TR;q=0.8,tr;q=0.7',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'DNT': '1',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"Windows"'
         }
-        response = requests.get(url, headers=headers, timeout=10, allow_redirects=True)
-        response.raise_for_status()
+        
+        # Try to fetch the URL with retry logic
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = session.get(url, headers=headers, timeout=15, allow_redirects=True)
+                response.raise_for_status()
+                break  # Success, exit retry loop
+            except requests.exceptions.HTTPError as e:
+                if attempt < max_retries - 1 and e.response.status_code in [403, 429, 503]:
+                    # Wait before retry with exponential backoff
+                    time.sleep(2 ** attempt)
+                    continue
+                else:
+                    raise  # Re-raise if last attempt or non-retryable error
         
         # Parse HTML content
         soup = BeautifulSoup(response.content, 'html.parser')
