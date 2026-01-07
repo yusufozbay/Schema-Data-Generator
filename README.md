@@ -6,7 +6,7 @@ A Streamlit web application that generates Schema.org structured data (JSON-LD a
 
 - ✨ **AI-Powered Generation**: Use Google Gemini AI to automatically extract and structure content
 - 🌐 **Enhanced URL Fetching**: Paste a URL and automatically fetch content from any web page
-  - **Bypasses 403 Errors**: Uses enhanced HTTP headers and Gemini AI to access restricted content
+  - **Bypasses 403 Errors**: Gemini AI directly accesses URLs, bypassing traditional HTTP restrictions
   - **Intelligent Extraction**: Gemini AI extracts main content while filtering out ads, navigation, and clutter
   - **Fallback Support**: Automatically falls back to traditional HTTP if needed
 - 🎯 **8 Schema Types**: Support for FAQPage, Article, Product, Breadcrumb, LocalBusiness, HowTo, Recipe, and Person
@@ -103,9 +103,9 @@ You can also use URL input mode to automatically fetch content from web pages:
 The app will automatically fetch the page content and use AI to extract relevant information based on your selected schema type.
 
 **How URL Fetching Works:**
-1. **Enhanced HTTP Request**: First, the app attempts to fetch the URL using enhanced HTTP headers that mimic a real browser, which helps bypass many 403 Forbidden errors and other restrictions.
-2. **Gemini AI Extraction**: Once the HTML is fetched, Gemini AI intelligently extracts the main content while filtering out navigation menus, advertisements, footers, and other non-essential elements.
-3. **Fallback Mechanism**: If the enhanced method encounters issues, the app automatically falls back to traditional HTTP requests for maximum compatibility.
+1. **Gemini AI Direct Fetch**: First, the app uses Gemini AI to directly fetch and process the URL. Gemini's built-in web access capabilities bypass many 403 Forbidden errors and other access restrictions that traditional HTTP requests encounter.
+2. **Intelligent Content Extraction**: Gemini AI intelligently extracts the main content while filtering out navigation menus, advertisements, footers, and other non-essential elements.
+3. **Fallback Mechanism**: If the Gemini method encounters issues, the app automatically falls back to traditional HTTP requests with enhanced headers for maximum compatibility.
 
 This dual approach ensures reliable content fetching from a wide variety of websites, even those with restrictive access policies.
 
