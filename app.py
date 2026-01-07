@@ -91,7 +91,18 @@ def fetch_url_content_with_gemini(url, api_key):
                 else:
                     raise  # Re-raise if last attempt or non-retryable error
         
-        # Get the raw HTML content
+        # Check if the response is actually HTML/text content
+        content_type = response.headers.get('content-type', '').lower()
+        if not any(ct in content_type for ct in ['text/', 'html', 'xml', 'json', 'javascript']):
+            return None, f"URL returned non-text content type: {content_type}"
+        
+        # Ensure proper encoding detection and decoding
+        # If encoding is not detected, use apparent_encoding as fallback
+        if response.encoding is None or response.encoding == 'ISO-8859-1':
+            # ISO-8859-1 is often a default fallback, use apparent_encoding instead
+            response.encoding = response.apparent_encoding or 'utf-8'
+        
+        # Get the raw HTML content with proper encoding
         html_content = response.text
         
         # Configure Gemini API
@@ -199,8 +210,19 @@ def fetch_url_content(url):
                 else:
                     raise  # Re-raise if last attempt or non-retryable error
         
-        # Parse HTML content
-        soup = BeautifulSoup(response.content, 'html.parser')
+        # Check if the response is actually HTML/text content
+        content_type = response.headers.get('content-type', '').lower()
+        if not any(ct in content_type for ct in ['text/', 'html', 'xml', 'json', 'javascript']):
+            return None, f"URL returned non-text content type: {content_type}"
+        
+        # Ensure proper encoding detection and decoding
+        # If encoding is not detected, use apparent_encoding as fallback
+        if response.encoding is None or response.encoding == 'ISO-8859-1':
+            # ISO-8859-1 is often a default fallback, use apparent_encoding instead
+            response.encoding = response.apparent_encoding or 'utf-8'
+        
+        # Parse HTML content with proper encoding
+        soup = BeautifulSoup(response.text, 'html.parser')
         
         # Remove script, style, and navigation elements to reduce size
         for script in soup(['script', 'style', 'nav', 'footer', 'header', 'aside']):
