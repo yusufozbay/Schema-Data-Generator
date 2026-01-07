@@ -98,6 +98,8 @@ def fetch_url_content(url):
         
         # Return the raw HTML content without interpretation
         # Gemini AI will handle the content extraction during schema generation
+        # Note: Large HTML content may exceed AI model token limits, but this is intentional
+        # to ensure raw content is passed exactly as fetched from the URL
         return response.text, None
     except requests.exceptions.RequestException as e:
         return None, f"Error fetching URL: {str(e)}"
@@ -113,7 +115,7 @@ def fetch_url_with_fallback(url, api_key):
     
     Args:
         url: The URL to fetch content from
-        api_key: Google Gemini API key (not used for fetching, only for schema generation)
+        api_key: Google Gemini API key (kept for API compatibility, not used for fetching)
     
     Returns:
         tuple: (content, error) where content is the fetched raw HTML or None,
