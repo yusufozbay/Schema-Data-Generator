@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 # Constants
 MAX_HTML_CONTENT_LENGTH = 50000  # Maximum HTML content length to send to Gemini (in characters)
 MAX_RETRIES = 3  # Maximum number of retry attempts for failed requests
-BASE_RETRY_DELAY = 2  # Base delay in seconds for exponential backoff (2^attempt)
+BASE_RETRY_DELAY = 2  # Base for exponential backoff calculation: delays will be 1s, 2s, 4s (2^0, 2^1, 2^2)
 RETRYABLE_STATUS_CODES = [403, 429, 503]  # HTTP status codes that should trigger a retry
 PRIMARY_FETCH_TIMEOUT = 20  # Timeout in seconds for primary fetch method (longer for Gemini processing)
 FALLBACK_FETCH_TIMEOUT = 15  # Timeout in seconds for fallback fetch method
